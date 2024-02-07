@@ -23,6 +23,9 @@ class LoadCell {
         HX711 sens_X2;
         HX711 sens_Y1;
         HX711 sens_Y2;
+
+        float prev_Y2;
+
     public:
     LoadCell(int calibFactor_x, int calibFactor_y) {
         sens_X1.begin(DOUT_X1, CLK_X1);
@@ -43,16 +46,17 @@ class LoadCell {
     }
 
     void readLoadCell(PacketBufferLoadCell& packet) {
-        // Serial.println("-----------------------");
-        // Serial.println(sens_X1.get_units(), 5);
-        // Serial.println(sens_X2.get_units(), 5);
-        // Serial.println(sens_Y1.get_units(), 5);
-        // Serial.println(sens_Y2.get_units(), 5);
         packet.packet.timestamp = micros();
-        packet.packet.values[0] = sens_X1.get_units();
-        packet.packet.values[1] = sens_X2.get_units();
-        packet.packet.values[2] = sens_Y1.get_units();
-        packet.packet.values[3] = sens_Y2.get_units();
+        packet.packet.values[0] = sens_X1.get_units(1);
+        packet.packet.values[1] = sens_X2.get_units(1);
+        // packet.packet.values[2] = sens_Y1.get_units();
+        if (sens_Y1.is_ready()) {
+            prev_Y2 = sens_Y1.get_units(1);
+            packet.packet.values[2] = prev_Y2;
+        } else {
+            packet.packet.values[2] = prev_Y2;
+        }
+        packet.packet.values[3] = sens_Y2.get_units(1);
     }
 };
 
